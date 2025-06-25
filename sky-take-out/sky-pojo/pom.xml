@@ -2,6 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 子模块，存放实体类
+         Entity: 实体类.通常与数据库表对应
+         DTO: 数据传输对象.通常用于与程序中各层之间传递数据
+         VO: 视图对象.为前端展示数据提供的对象
+         POJO: 普通java对象,只有属性和getter/setter方法
+    -->
     <parent>
         <artifactId>sky-take-out</artifactId>
         <groupId>com.sky</groupId>

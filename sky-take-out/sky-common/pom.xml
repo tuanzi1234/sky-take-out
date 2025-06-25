@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 子工程，用于存放公共类，如：工具类、常量类、异常类 -->
     <parent>
         <artifactId>sky-take-out</artifactId>
         <groupId>com.sky</groupId>
