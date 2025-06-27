@@ -12,6 +12,11 @@ spring:
       url: jdbc:mysql://${sky.datasource.host}:${sky.datasource.port}/${sky.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${sky.datasource.username}
       password: ${sky.datasource.password}
+  # Servlet容器配置
+  servlet:
+    multipart:
+      max-file-size: 20MB  # 单个文件上传大小限制
+      max-request-size: 20MB  # 整请求体大小限制
 
 mybatis:
   #mapper配置文件
@@ -37,3 +42,8 @@ sky:
     admin-ttl: 86400000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
+  # 阿里云参数配置
+  alioss:
+    endpoint: ${sky.alioss.endpoint}
+    bucket-name: ${sky.alioss.bucket-name}
+    region: ${sky.alioss.region}
