@@ -2,10 +2,15 @@ package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
+import com.sky.exception.SetmealEnableFailedException;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class SetmealServiceImpl implements SetmealService {
@@ -25,6 +31,8 @@ public class SetmealServiceImpl implements SetmealService {
     private SetmealMapper setmealMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private DishMapper dishMapper;
 
     /**
      * 分页查询
@@ -102,5 +110,39 @@ public class SetmealServiceImpl implements SetmealService {
             //保存套餐和菜品的关联关系
             setmealDishMapper.insertBatch(setmealDishes);
         }
+    }
+
+    /**
+     * 套餐起售停售
+     * @param status
+     * @param id
+     * @return
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        // 查询当前套餐信息
+        Setmeal setmeal = setmealMapper.getById(id);
+        // 如果是起售操作（status=1）且套餐当前是停售状态
+        if (status == StatusConstant.ENABLE && setmeal.getStatus() == StatusConstant.DISABLE) {
+            // 获取套餐关联的所有菜品
+            List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
+            // 检查菜品状态
+            if (setmealDishes != null && !setmealDishes.isEmpty()) {
+                for (SetmealDish setmealDish : setmealDishes) {
+                    // 根据套餐中关联的菜品id获取当前菜品
+                    Dish dish = dishMapper.getById(setmealDish.getDishId());
+                    // 判断当前菜品是否是停售状态
+                    if (dish != null && Objects.equals(dish.getStatus(), StatusConstant.DISABLE)) {
+                        // 若当前菜品停售，抛出菜品停售异常
+                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                    }
+                }
+            }
+        }
+        // 若菜品不停书，则更新套餐状态
+        Setmeal updateSetmeal = new Setmeal();
+        updateSetmeal.setId(id);
+        updateSetmeal.setStatus(status);
+        setmealMapper.update(updateSetmeal);
     }
 }
