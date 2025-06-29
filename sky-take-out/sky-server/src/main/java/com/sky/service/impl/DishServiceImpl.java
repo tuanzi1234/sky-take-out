@@ -142,7 +142,7 @@ public class DishServiceImpl implements DishService {
     }
 
     /**
-     * 批量起售停售
+     * 菜品起售停售
      * @param status
      * @param id
      */
