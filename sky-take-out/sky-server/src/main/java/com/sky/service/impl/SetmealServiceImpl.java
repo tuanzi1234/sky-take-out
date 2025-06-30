@@ -16,12 +16,15 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.DishVO;
 import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -167,4 +170,40 @@ public class SetmealServiceImpl implements SetmealService {
         // 删除套餐和菜品的关联数据
         setmealDishMapper.deleteBySetmealIds(ids);
     }
+
+    /**
+     * 根据分类id查询套餐
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Setmeal> list(Long categoryId) {
+        return setmealMapper.list(categoryId);
+    }
+
+    /**
+     * 根据套餐id查询包含的菜品
+     * @param id
+     * @return
+     */
+    @Override
+    public List<DishItemVO> getSetmealIdWithDish(Long id) {
+        List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
+        List<DishItemVO> dishItemVOs = new ArrayList<>();
+        // 遍历并封装数据
+        for (SetmealDish setmealDish : setmealDishes) {
+            // 根据菜品ID查询菜品详情
+            Dish dish = dishMapper.getById(setmealDish.getDishId());
+            //  创建DishVO对象
+            DishItemVO dishItemVO = new DishItemVO();
+            //  复制菜品基本信息
+            BeanUtils.copyProperties(dish, dishItemVO);
+            //  设置套餐特有属性（份数）
+            dishItemVO.setCopies(setmealDish.getCopies());
+            //  添加到结果列表
+            dishItemVOs.add(dishItemVO);
+        }
+        return dishItemVOs;
+    }
+
 }

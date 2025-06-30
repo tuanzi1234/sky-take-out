@@ -4,28 +4,26 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.dto.CategoryDTO;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
 import com.sky.entity.Setmeal;
+import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
-import com.sky.mapper.DishFlavorMapper;
-import com.sky.mapper.DishMapper;
-import com.sky.mapper.DishSetmealMapper;
-import com.sky.mapper.SetmealMapper;
+import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
+import com.sky.vo.DishItemVO;
 import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DishServiceImpl implements DishService {
@@ -38,6 +36,8 @@ public class DishServiceImpl implements DishService {
     private DishSetmealMapper dishSetmealMapper;
     @Autowired
     private SetmealMapper setmealMapper;
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     /**
      * 新增菜品和对应的口味
@@ -186,6 +186,31 @@ public class DishServiceImpl implements DishService {
     @Override
     public List<Dish> list(Long categoryId) {
         return dishMapper.list(categoryId);
+    }
+
+    /**
+     * 根据分类id查询菜品以及菜品口味
+     *
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<DishVO> listWithFlavors(Long categoryId) {
+        // 1. 查询基础菜品数据
+        List<Dish> dishList = dishMapper.list(categoryId);
+        // 2. 获取分类名称
+        CategoryDTO  category = categoryMapper.getById(categoryId);
+        // 2. 创建返回结果列表
+        List<DishVO> dishVOList = new ArrayList<>();
+        // 3. 遍历菜品数据，将每个菜品数据转换为DishVO对象
+        for (Dish dish : dishList) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(dish, dishVO);
+            List<DishFlavor> flavors = dishFlavorMapper.getByDishId(dish.getId());
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        }
+        return dishVOList;
     }
 
 }
