@@ -76,6 +76,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     }
 
+    /**
+     * 查看购物车
+     * @return
+     */
     @Override
     public List<ShoppingCart> showShoppingCart() {
         //获取当前用户的id
@@ -97,5 +101,29 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         //获取当前用户id
         Long userId = BaseContext.getCurrentId();
         shoppingCartMapper.deleteByIds(userId);
+    }
+
+    /**
+     * 删除购物车中的数据
+     * @param shoppingCartDTO
+     */
+    @Override
+    public void deleteByIds(ShoppingCartDTO shoppingCartDTO) {
+        //构造购物车对象
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .dishId(shoppingCartDTO.getDishId())
+                .setmealId(shoppingCartDTO.getSetmealId())
+                .dishFlavor(shoppingCartDTO.getDishFlavor())
+                .build();
+        //检查购物车数据，若数量不为1，则数量减1
+        if (shoppingCartMapper.list(shoppingCart) != null && !shoppingCartMapper.list(shoppingCart).isEmpty()) {
+            ShoppingCart cart = shoppingCartMapper.list(shoppingCart).get(0);
+            if (cart.getNumber() > 1) {
+                cart.setNumber(cart.getNumber() - 1);
+                shoppingCartMapper.addDishNumById(cart);
+            } else {
+                shoppingCartMapper.deleteByShoppingCardId(cart.getId());
+            }
+        }
     }
 }
