@@ -2,7 +2,6 @@ package com.sky.controller.user;
 
 import com.sky.result.Result;
 import com.sky.service.DishService;
-import com.sky.vo.DishItemVO;
 import com.sky.vo.DishVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,6 +25,12 @@ public class DishController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    /**
+     * 根据分类id查询菜品
+     *
+     * @param categoryId
+     * @return
+     */
     @GetMapping("/list")
     @ApiOperation(value = "根据分类id查询菜品")
     public Result<List<DishVO>> list(Long categoryId) {
