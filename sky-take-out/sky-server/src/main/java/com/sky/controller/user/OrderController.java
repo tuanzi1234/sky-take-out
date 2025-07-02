@@ -61,4 +61,17 @@ public class OrderController {
         return Result.success(pageResult);
     }
 
+    /**
+     * 根据id获取订单
+     * @param id
+     * @return
+     */
+    @GetMapping("/orderDetail/{id}")
+    @ApiOperation("根据id获取订单详情")
+    public Result<OrderVO> getOrderDetailById(@PathVariable Long id){
+        log.info("根据id获取订单详情：{}", id);
+        OrderVO orderVO = orderService.getOrderDetailById(id);
+        return Result.success(orderVO);
+    }
+
 }

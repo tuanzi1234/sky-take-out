@@ -158,6 +158,13 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
     }
 
+    /**
+     * 分页条件查询订单
+     * @param pageNum
+     * @param pageSize
+     * @param status
+     * @return
+     */
     @Override
     public PageResult pageQuery(Integer pageNum, Integer pageSize, Integer status) {
         //设置分页查询条件
@@ -183,4 +190,24 @@ public class OrderServiceImpl implements OrderService {
         return new PageResult(page.getTotal(),list);
     }
 
+    /**
+     * 根据id查询订单
+     * @param id
+     * @return
+     */
+    @Override
+    public OrderVO getOrderDetailById(Long id) {
+        //查询订单数据
+        Orders orders = orderMapper.getById(id);
+        //创建一个OrderVO对象，用于封装订单以及订单明细数据
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders,orderVO);
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+        orderVO.setOrderDetailList(orderDetailList);
+        //查询地址
+        AddressBook addressBook = addressMapper.getById(orders.getAddressBookId());
+        orderVO.setAddress(addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + "(" + addressBook.getDetail() + ")");
+        //返回数据
+        return orderVO;
+    }
 }
