@@ -14,8 +14,7 @@
                 #{rejectionReason}, #{cancelTime}, #{estimatedDeliveryTime}, #{deliveryStatus}, #{deliveryTime},
                 #{packAmount}, #{tablewareNumber}, #{tablewareStatus})
     </insert>
-
-
+    <!--    修改订单信息-->
     <update id="update" parameterType="com.sky.entity.Orders">
         update orders
         <set>

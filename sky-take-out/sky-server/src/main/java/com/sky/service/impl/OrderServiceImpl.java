@@ -5,10 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersCancelDTO;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.DeletionNotAllowedException;
@@ -178,7 +175,6 @@ public class OrderServiceImpl implements OrderService {
         } else {
             ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
         }
-
         //执行分页查询
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
         //创建一个集合，用于存放订单和订单明细
@@ -190,11 +186,38 @@ public class OrderServiceImpl implements OrderService {
                 BeanUtils.copyProperties(orders, orderVO);
                 List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
                 orderVO.setOrderDetailList(orderDetailList);
+                // 生成菜品/套餐摘要信息
+                String dishesSummary = generateDishesSummary(orderDetailList);
+                orderVO.setOrderDishes(dishesSummary); // 设置到新属性
                 //将订单明细的查询结果封装进orderVO
+                //查询地址
+                AddressBook addressBook = addressMapper.getById(orders.getAddressBookId());
+                orderVO.setAddress(addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + "(" + addressBook.getDetail() + ")");
+                //查询订单详情中的菜品或套餐
                 list.add(orderVO);
             }
         }
+
         return new PageResult(page.getTotal(),list);
+    }
+    /**
+     * 生成菜品/套餐摘要信息
+     * @param orderDetailList 订单明细列表
+     * @return 摘要字符串
+     */
+    private String generateDishesSummary(List<OrderDetail> orderDetailList) {
+        if (orderDetailList == null || orderDetailList.isEmpty()) {
+            return "";
+        }
+
+        // 使用流处理生成摘要
+        return orderDetailList.stream()
+                .map(detail -> {
+                    String dishName = detail.getName(); // 菜品/套餐名称
+                    int number = detail.getNumber();    // 数量
+                    return dishName + " × " + number;
+                })
+                .collect(Collectors.joining("， ")); // 用中文逗号分隔
     }
 
     /**
@@ -222,6 +245,7 @@ public class OrderServiceImpl implements OrderService {
      * 再来一单
      * @param id
      */
+    @Transactional
     @Override
     public void repetition(Long id) {
         // 1. 查询当前用户ID
@@ -255,6 +279,7 @@ public class OrderServiceImpl implements OrderService {
      * @param cancelReason
      * @return
      */
+    @Transactional
     @Override
     public void cancel(Long id, String cancelReason) {
         Orders orders = orderMapper.getById(id);
@@ -336,5 +361,26 @@ public class OrderServiceImpl implements OrderService {
         }else {
             return "未知";
         }
+    }
+    /**
+     * 接单
+     * @param id
+     */
+    @Override
+    public void confirm(Long id) {
+        // 查询订单
+        Orders orders = orderMapper.getById(id);
+        if (orders == null){
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 判断订单状态
+        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)){
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        // 修改后（更安全）
+        Orders updateOrder = new Orders();
+        updateOrder.setId(id);
+        updateOrder.setStatus(Orders.CONFIRMED);
+        orderMapper.update(updateOrder);
     }
 }
