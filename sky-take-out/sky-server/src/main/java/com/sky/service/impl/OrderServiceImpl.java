@@ -29,9 +29,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -165,18 +163,22 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 分页条件查询订单
-     * @param pageNum
-     * @param pageSize
-     * @param status
+     * @param ordersPageQueryDTO
      * @return
      */
     @Override
-    public PageResult pageQuery(Integer pageNum, Integer pageSize, Integer status) {
+    public PageResult pageQuery(OrdersPageQueryDTO ordersPageQueryDTO) {
         //设置分页查询条件
-        PageHelper.startPage(pageNum, pageSize);
-        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        Integer status = ordersPageQueryDTO.getStatus();
         ordersPageQueryDTO.setStatus(status);
-        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        // 仅用户端查询设置用户ID，管理端不设置
+        if (ordersPageQueryDTO.getUserId() == null) {
+            ordersPageQueryDTO.setUserId(null); // 明确设置为null
+        } else {
+            ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        }
+
         //执行分页查询
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
         //创建一个集合，用于存放订单和订单明细
@@ -282,5 +284,57 @@ public class OrderServiceImpl implements OrderService {
 
         // 4. 更新订单
         orderMapper.update(updateOrder);
+    }
+
+    /**
+     * 统计各状态订单数量
+     *
+     * @return
+     */
+    @Override
+    public Map<String, Integer> statistics() {
+        // 2. 创建状态统计Map
+        Map<String, Integer> statusCountMap = new LinkedHashMap<>();
+
+        // 3. 定义需要统计的状态列表
+        List<Integer> statusList = Arrays.asList(
+                Orders.PENDING_PAYMENT,     // 待付款
+                Orders.TO_BE_CONFIRMED,     // 待接单
+                Orders.CONFIRMED,           // 已接单
+                Orders.DELIVERY_IN_PROGRESS,// 派送中
+                Orders.COMPLETED,           // 已完成
+                Orders.CANCELLED            // 已取消
+        );
+
+        // 4. 遍历状态列表，查询每个状态的订单数量
+        for (Integer status : statusList) {
+            Integer count = orderMapper.countByStatus(status);
+            statusCountMap.put(getStatusName(status), count != null ? count : 0);
+        }
+
+        return statusCountMap;
+    }
+
+    /**
+     * 根据状态码获取状态名称
+     * @param status 状态码
+     * @return 状态名称
+     */
+    private String getStatusName(Integer status) {
+        if (Objects.equals(status, Orders.PENDING_PAYMENT)){
+            return "待付款";
+        }else if (Objects.equals(status, Orders.TO_BE_CONFIRMED)){
+            return "待接单";
+        }else if (Objects.equals(status, Orders.CONFIRMED)){
+            return "待派单";
+        }else if (Objects.equals(status, Orders.DELIVERY_IN_PROGRESS)){
+            return "派单中";
+        }else if (Objects.equals(status, Orders.COMPLETED)){
+            return "已完成";
+        }else if (Objects.equals(status, Orders.CANCELLED)){
+            return "已取消";
+        }else {
+            return "未知";
+        }
     }
 }

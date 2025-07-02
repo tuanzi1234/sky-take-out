@@ -1,12 +1,15 @@
 package com.sky.service;
 
 import com.sky.dto.OrdersCancelDTO;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.result.PageResult;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+
+import java.util.Map;
 
 public interface OrderService {
     /**
@@ -31,12 +34,10 @@ public interface OrderService {
 
     /**
      * 分页查询订单列表
-     * @param page
-     * @param pageSize
-     * @param status
+     * @param ordersPageQueryDTO
      * @return
      */
-    PageResult pageQuery(Integer page, Integer pageSize, Integer status);
+    PageResult pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 
     /**
      * 根据id获取订单
@@ -58,4 +59,10 @@ public interface OrderService {
      * @param cancelReason
      */
     void cancel(Long id, String cancelReason);
+
+    /**
+     * 统计各状态订单数量
+     * @return
+     */
+    Map<String , Integer> statistics();
 }
