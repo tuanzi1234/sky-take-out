@@ -12,6 +12,7 @@ import com.sky.service.ShoppingCartService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +31,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      * 添加购物车
      * @param shoppingCartDTO
      */
+    @Transactional
     @Override
     public void add(ShoppingCartDTO shoppingCartDTO) {
         //判断当前商品是否在购物车中
@@ -107,6 +109,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      * 删除购物车中的数据
      * @param shoppingCartDTO
      */
+    @Transactional
     @Override
     public void deleteByIds(ShoppingCartDTO shoppingCartDTO) {
         //构造购物车对象

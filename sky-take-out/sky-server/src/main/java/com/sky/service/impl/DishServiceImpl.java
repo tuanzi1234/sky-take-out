@@ -125,6 +125,7 @@ public class DishServiceImpl implements DishService {
      * 修改菜品
      * @param dishDTO
      */
+    @Transactional
     @Override
     public void updateWithFlavor(DishDTO dishDTO) {
         //先修改菜品基本信息
@@ -146,6 +147,7 @@ public class DishServiceImpl implements DishService {
      * @param status
      * @param id
      */
+    @Transactional
     @Override
     public void startOrStop(Integer status, Long id) {
         // 更新菜品状态

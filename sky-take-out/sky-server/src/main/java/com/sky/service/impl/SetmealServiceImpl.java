@@ -17,7 +17,6 @@ import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.DishItemVO;
-import com.sky.vo.DishVO;
 import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +95,7 @@ public class SetmealServiceImpl implements SetmealService {
      * 修改套餐
      * @param setmealDTO
      */
+    @Transactional
     @Override
     public void updateWithDish(SetmealDTO setmealDTO) {
         //修改套餐表数据
@@ -122,6 +122,7 @@ public class SetmealServiceImpl implements SetmealService {
      * @param id
      * @return
      */
+    @Transactional
     @Override
     public void startOrStop(Integer status, Long id) {
         // 查询当前套餐信息
