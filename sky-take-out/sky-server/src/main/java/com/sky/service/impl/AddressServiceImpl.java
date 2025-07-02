@@ -92,4 +92,10 @@ public class AddressServiceImpl implements AddressService {
         addressBook.setIsDefault(1);
         addressMapper.updateById(addressBook);
     }
+
+    @Override
+    public AddressBook getDefault() {
+        Long userId = BaseContext.getCurrentId();
+        return addressMapper.getDefault(userId);
+    }
 }

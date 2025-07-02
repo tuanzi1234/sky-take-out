@@ -44,4 +44,10 @@ public interface AddressService {
      * @param addressBook
      */
     void updateDefaultAddress(AddressBook addressBook);
+
+    /**
+     * 查询默认地址
+     * @return
+     */
+    AddressBook getDefault();
 }

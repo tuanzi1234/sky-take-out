@@ -49,4 +49,12 @@ public interface AddressMapper {
      * @param userId
      */
     void cancelAllDefault(Long userId);
+
+    /**
+     * 根据用户id查询默认地址
+     * @param userId
+     * @return
+     */
+    @Select("select * from address_book where user_id = #{userId} and is_default = 1")
+    AddressBook getDefault(Long userId);
 }

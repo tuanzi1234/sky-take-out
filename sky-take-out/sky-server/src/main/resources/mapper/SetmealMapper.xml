@@ -64,6 +64,6 @@
                 and s.name like concat('%',#{name},'%')
             </if>
         </where>
-        order by s.update_time desc
+        order by s.create_time desc
     </select>
 </mapper>

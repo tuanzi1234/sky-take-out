@@ -101,4 +101,15 @@ public class AddressController {
         addressService.updateDefaultAddress(addressBook);
         return Result.success();
     }
+    /**
+     * 查询默认地址
+     * @return
+     */
+    @GetMapping("/default")
+    @ApiOperation(value = "查询默认地址")
+    public Result<AddressBook> getDefault() {
+        log.info("查询默认地址");
+        AddressBook addressBook = addressService.getDefault();
+        return Result.success(addressBook);
+    }
 }
