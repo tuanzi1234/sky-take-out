@@ -5,6 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
@@ -30,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -243,5 +245,42 @@ public class OrderServiceImpl implements OrderService {
 
         // 5. 批量插入购物车
         shoppingCartMapper.insertBatch(shoppingCartList);
+    }
+
+    /**
+     * 取消订单
+     * @param id
+     * @param cancelReason
+     * @return
+     */
+    @Override
+    public void cancel(Long id, String cancelReason) {
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 1. 校验订单状态（只有待支付和待接单状态可以取消）
+        Integer status = orders.getStatus();
+        if (!Objects.equals(status, Orders.PENDING_PAYMENT) &&
+                !Objects.equals(status, Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 2. 更新订单状态
+        Orders updateOrder = new Orders();
+        updateOrder.setId(id);
+        updateOrder.setStatus(Orders.CANCELLED);
+        updateOrder.setCancelReason(cancelReason);
+        updateOrder.setCancelTime(LocalDateTime.now());
+
+        // 3. 如果订单已支付，需要退款（模拟环境仅记录日志）
+        if (Objects.equals(orders.getPayStatus(), Orders.PAID)) {
+            // 实际项目中应调用微信退款接口，这里仅模拟
+            updateOrder.setPayStatus(Orders.REFUND);
+        }
+
+        // 4. 更新订单
+        orderMapper.update(updateOrder);
     }
 }
