@@ -10,6 +10,7 @@ import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
+import com.sky.exception.DeletionNotAllowedException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
@@ -23,11 +24,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -209,5 +212,36 @@ public class OrderServiceImpl implements OrderService {
         orderVO.setAddress(addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + "(" + addressBook.getDetail() + ")");
         //返回数据
         return orderVO;
+    }
+
+    /**
+     * 再来一单
+     * @param id
+     */
+    @Override
+    public void repetition(Long id) {
+        // 1. 查询当前用户ID
+        Long userId = BaseContext.getCurrentId();
+
+        // 2. 查询订单详情
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+        if (orderDetailList == null || orderDetailList.isEmpty()) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 3. 清空当前用户的购物车（可选，根据业务需求）
+        shoppingCartMapper.deleteByIds(userId);
+
+        // 4. 将订单详情转换为购物车项
+        List<ShoppingCart> shoppingCartList = orderDetailList.stream().map(orderDetail -> {
+            ShoppingCart cartItem = new ShoppingCart();
+            BeanUtils.copyProperties(orderDetail, cartItem);
+            cartItem.setUserId(userId);
+            cartItem.setCreateTime(LocalDateTime.now());
+            return cartItem;
+        }).collect(Collectors.toList());
+
+        // 5. 批量插入购物车
+        shoppingCartMapper.insertBatch(shoppingCartList);
     }
 }
