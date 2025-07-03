@@ -274,7 +274,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 取消订单
+     * 用户端取消订单
      * @param id
      * @param cancelReason
      * @return
@@ -286,30 +286,53 @@ public class OrderServiceImpl implements OrderService {
         if (orders == null) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
         }
-
-        // 1. 校验订单状态（只有待支付和待接单状态可以取消）
-        Integer status = orders.getStatus();
-        if (!Objects.equals(status, Orders.PENDING_PAYMENT) &&
-                !Objects.equals(status, Orders.TO_BE_CONFIRMED)) {
+        // 1. 校验订单状态
+        if (Objects.equals(orders.getStatus(), Orders.CANCELLED) || orders.getStatus().equals(Orders.COMPLETED)) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+        Orders updateOrder = cancelOrder(id, cancelReason);
+        // 4. 更新订单
+        orderMapper.update(updateOrder);
+    }
 
-        // 2. 更新订单状态
+    /**
+     * 管理端取消订单
+     * @param cancelDTO
+     */
+    @Override
+    public void adminCancel(OrdersCancelDTO cancelDTO) {
+        Long id = cancelDTO.getId();
+        String cancelReason = cancelDTO.getCancelReason();
+        // 查询订单
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 管理员可以取消任何状态的订单（除已完成和已取消）
+        if (Objects.equals(orders.getStatus(), Orders.COMPLETED) || Objects.equals(orders.getStatus(), Orders.CANCELLED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Orders updateOrder = cancelOrder(id, cancelReason);
+        orderMapper.update(updateOrder);
+    }
+    /**
+     * 统一取消订单
+     */
+    private Orders cancelOrder(Long id, String cancelReason) {
+        // 更新订单状态
         Orders updateOrder = new Orders();
         updateOrder.setId(id);
         updateOrder.setStatus(Orders.CANCELLED);
         updateOrder.setCancelReason(cancelReason);
         updateOrder.setCancelTime(LocalDateTime.now());
-
-        // 3. 如果订单已支付，需要退款（模拟环境仅记录日志）
+        Orders orders = orderMapper.getById(id);
+        // 处理退款逻辑
         if (Objects.equals(orders.getPayStatus(), Orders.PAID)) {
-            // 实际项目中应调用微信退款接口，这里仅模拟
             updateOrder.setPayStatus(Orders.REFUND);
         }
-
-        // 4. 更新订单
-        orderMapper.update(updateOrder);
+        return updateOrder;
     }
+
 
     /**
      * 统计各状态订单数量
@@ -383,4 +406,32 @@ public class OrderServiceImpl implements OrderService {
         updateOrder.setStatus(Orders.CONFIRMED);
         orderMapper.update(updateOrder);
     }
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     */
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        // 1. 查询当前订单
+        Orders orders = orderMapper.getById(ordersRejectionDTO.getId());
+        if (orders == null){
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 2. 校验订单状态
+        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)){
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        // 3. 创建更新对象
+        Orders updateOrder = new Orders();
+        updateOrder.setId(orders.getId());
+        updateOrder.setStatus(Orders.CANCELLED);
+        updateOrder.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        updateOrder.setCancelTime(LocalDateTime.now());
+        updateOrder.setCancelReason(ordersRejectionDTO.getRejectionReason());
+        // 4. 更新订单
+        orderMapper.update(updateOrder);
+    }
+
+
 }

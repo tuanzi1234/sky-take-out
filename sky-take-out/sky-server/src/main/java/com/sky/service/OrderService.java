@@ -68,4 +68,16 @@ public interface OrderService {
      * @param id
      */
     void confirm(Long  id);
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     */
+    void rejection(OrdersRejectionDTO ordersRejectionDTO);
+
+    /**
+     * 管理端取消订单
+     * @param cancelDTO
+     */
+    void adminCancel(OrdersCancelDTO cancelDTO);
 }
