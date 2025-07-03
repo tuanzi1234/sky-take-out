@@ -1,6 +1,5 @@
 package com.sky.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -12,7 +11,6 @@ import com.sky.exception.DeletionNotAllowedException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
-import com.sky.service.AddressService;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -22,9 +20,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -83,7 +79,7 @@ public class OrderServiceImpl implements OrderService {
         //3.向订单明细表插入数据
         //3.1创建一个集合，用于存放订单明细数据
         List<OrderDetail> orderDetailList = new ArrayList<>();
-        for (ShoppingCart cart : shoppingCartList){
+        for (ShoppingCart cart : shoppingCartList) {
             OrderDetail orderDetail = new OrderDetail();
             BeanUtils.copyProperties(cart, orderDetail);
             orderDetail.setOrderId(orders.getId());
@@ -100,6 +96,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderTime(orders.getOrderTime())
                 .build();
     }
+
     /**
      * 订单支付
      *
@@ -160,6 +157,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 分页条件查询订单
+     *
      * @param ordersPageQueryDTO
      * @return
      */
@@ -180,7 +178,7 @@ public class OrderServiceImpl implements OrderService {
         //创建一个集合，用于存放订单和订单明细
         List<OrderVO> list = new ArrayList<>();
         //进一步查询订单详情
-        if (page != null && page.getTotal() > 0){
+        if (page != null && page.getTotal() > 0) {
             for (Orders orders : page) {
                 OrderVO orderVO = new OrderVO();
                 BeanUtils.copyProperties(orders, orderVO);
@@ -198,10 +196,12 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        return new PageResult(page.getTotal(),list);
+        return new PageResult(page.getTotal(), list);
     }
+
     /**
      * 生成菜品/套餐摘要信息
+     *
      * @param orderDetailList 订单明细列表
      * @return 摘要字符串
      */
@@ -222,6 +222,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 根据id查询订单
+     *
      * @param id
      * @return
      */
@@ -231,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = orderMapper.getById(id);
         //创建一个OrderVO对象，用于封装订单以及订单明细数据
         OrderVO orderVO = new OrderVO();
-        BeanUtils.copyProperties(orders,orderVO);
+        BeanUtils.copyProperties(orders, orderVO);
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
         orderVO.setOrderDetailList(orderDetailList);
         //查询地址
@@ -243,6 +244,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 再来一单
+     *
      * @param id
      */
     @Transactional
@@ -275,6 +277,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 用户端取消订单
+     *
      * @param id
      * @param cancelReason
      * @return
@@ -282,50 +285,42 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void cancel(Long id, String cancelReason) {
-        Orders orders = orderMapper.getById(id);
-        if (orders == null) {
-            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
-        }
-        // 1. 校验订单状态
-        if (Objects.equals(orders.getStatus(), Orders.CANCELLED) || orders.getStatus().equals(Orders.COMPLETED)) {
-            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
-        }
-        Orders updateOrder = cancelOrder(id, cancelReason);
-        // 4. 更新订单
+        Orders updateOrder = cancelOrder( id, cancelReason);
         orderMapper.update(updateOrder);
     }
 
     /**
      * 管理端取消订单
+     *
      * @param cancelDTO
      */
+    @Transactional
     @Override
     public void adminCancel(OrdersCancelDTO cancelDTO) {
         Long id = cancelDTO.getId();
         String cancelReason = cancelDTO.getCancelReason();
+        Orders updateOrder = cancelOrder( id, cancelReason);
+        orderMapper.update(updateOrder);
+    }
+
+    /**
+     * 统一取消订单
+     */
+    private Orders cancelOrder(Long id, String cancelReason) {
         // 查询订单
         Orders orders = orderMapper.getById(id);
         if (orders == null) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
         }
-        // 管理员可以取消任何状态的订单（除已完成和已取消）
-        if (Objects.equals(orders.getStatus(), Orders.COMPLETED) || Objects.equals(orders.getStatus(), Orders.CANCELLED)) {
+        if (Objects.equals(orders.getStatus(), Orders.CANCELLED)) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
-        Orders updateOrder = cancelOrder(id, cancelReason);
-        orderMapper.update(updateOrder);
-    }
-    /**
-     * 统一取消订单
-     */
-    private Orders cancelOrder(Long id, String cancelReason) {
         // 更新订单状态
         Orders updateOrder = new Orders();
         updateOrder.setId(id);
         updateOrder.setStatus(Orders.CANCELLED);
         updateOrder.setCancelReason(cancelReason);
         updateOrder.setCancelTime(LocalDateTime.now());
-        Orders orders = orderMapper.getById(id);
         // 处理退款逻辑
         if (Objects.equals(orders.getPayStatus(), Orders.PAID)) {
             updateOrder.setPayStatus(Orders.REFUND);
@@ -365,39 +360,42 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 根据状态码获取状态名称
+     *
      * @param status 状态码
      * @return 状态名称
      */
     private String getStatusName(Integer status) {
-        if (Objects.equals(status, Orders.PENDING_PAYMENT)){
+        if (Objects.equals(status, Orders.PENDING_PAYMENT)) {
             return "待付款";
-        }else if (Objects.equals(status, Orders.TO_BE_CONFIRMED)){
+        } else if (Objects.equals(status, Orders.TO_BE_CONFIRMED)) {
             return "待接单";
-        }else if (Objects.equals(status, Orders.CONFIRMED)){
+        } else if (Objects.equals(status, Orders.CONFIRMED)) {
             return "待派单";
-        }else if (Objects.equals(status, Orders.DELIVERY_IN_PROGRESS)){
+        } else if (Objects.equals(status, Orders.DELIVERY_IN_PROGRESS)) {
             return "派单中";
-        }else if (Objects.equals(status, Orders.COMPLETED)){
+        } else if (Objects.equals(status, Orders.COMPLETED)) {
             return "已完成";
-        }else if (Objects.equals(status, Orders.CANCELLED)){
+        } else if (Objects.equals(status, Orders.CANCELLED)) {
             return "已取消";
-        }else {
+        } else {
             return "未知";
         }
     }
+
     /**
      * 接单
+     *
      * @param id
      */
     @Override
     public void confirm(Long id) {
         // 查询订单
         Orders orders = orderMapper.getById(id);
-        if (orders == null){
+        if (orders == null) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
         }
         // 判断订单状态
-        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)){
+        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_STATUS_ERROR);
         }
         // 修改后（更安全）
@@ -409,17 +407,18 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 拒单
+     *
      * @param ordersRejectionDTO
      */
     @Override
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
         // 1. 查询当前订单
         Orders orders = orderMapper.getById(ordersRejectionDTO.getId());
-        if (orders == null){
+        if (orders == null) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
         }
         // 2. 校验订单状态
-        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)){
+        if (!Objects.equals(orders.getStatus(), Orders.TO_BE_CONFIRMED)) {
             throw new DeletionNotAllowedException(MessageConstant.ORDER_STATUS_ERROR);
         }
         // 3. 创建更新对象
@@ -434,4 +433,44 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
+    /**
+     * 派送订单
+     *
+     * @param id
+     */
+    @Override
+    public void delivery(Long id) {
+        Orders order = orderMapper.getById(id);
+        if (order == null) {
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if (!Objects.equals(order.getStatus(), Orders.CONFIRMED)) {
+            throw new DeletionNotAllowedException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Orders updateOrder = new Orders();
+        updateOrder.setId(id);
+        updateOrder.setStatus(Orders.DELIVERY_IN_PROGRESS);
+        orderMapper.update(updateOrder);
+    }
+
+    /**
+     * 完成订单
+     *
+     * @param id
+     */
+    @Override
+    public void complete(Long id) {
+        Orders order = orderMapper.getById(id);
+        if (order == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if (!order.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Orders updateOrder = new Orders();
+        updateOrder.setId(id);
+        updateOrder.setStatus(Orders.COMPLETED);
+        updateOrder.setDeliveryTime(LocalDateTime.now());
+        orderMapper.update(updateOrder);
+    }
 }
