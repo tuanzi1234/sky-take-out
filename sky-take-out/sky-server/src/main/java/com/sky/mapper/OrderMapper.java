@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.vo.OrderVO;
@@ -18,12 +19,14 @@ public interface OrderMapper {
 
     /**
      * 插入订单数据
+     *
      * @param orders
      */
     void insert(Orders orders);
 
     /**
      * 根据订单号查询订单
+     *
      * @param orderNumber
      */
     @Select("select * from orders where number = #{orderNumber}")
@@ -31,12 +34,14 @@ public interface OrderMapper {
 
     /**
      * 修改订单信息
+     *
      * @param orders
      */
     void update(Orders orders);
 
     /**
      * 订单分页查询
+     *
      * @param ordersPageQueryDTO
      * @return
      */
@@ -44,6 +49,7 @@ public interface OrderMapper {
 
     /**
      * 根据id查询订单
+     *
      * @param id
      * @return
      */
@@ -52,6 +58,7 @@ public interface OrderMapper {
 
     /**
      * 查询指定状态的订单数量
+     *
      * @param status
      * @return
      */
@@ -60,6 +67,7 @@ public interface OrderMapper {
 
     /**
      * 通过状态和指定时间搜索对应订单
+     *
      * @param status
      * @param orderTime
      * @return
@@ -69,13 +77,24 @@ public interface OrderMapper {
 
     /**
      * 通过状态、开始时间和结束时间搜索对应订单的营业额
+     *
      * @param map
      */
-    Double getOrdersByTimeAndStatus( Map<String, Object> map);
+    Double getOrdersByTimeAndStatus(Map<String, Object> map);
 
     /**
      * 通过状态、开始时间和结束时间搜索对应订单的订单数量
+     *
      * @param map
      */
-    Integer getOrdersCountByTimeAndStatus( Map<String, Object> map);
+    Integer getOrdersCountByTimeAndStatus(Map<String, Object> map);
+
+    /**
+     * 通过状态、开始时间和结束时间查询销量top10
+     *
+     * @param begin
+     * @param end
+     * @return
+     */
+    List<GoodsSalesDTO> getSalesTop10(LocalDateTime begin, LocalDateTime end);
 }
