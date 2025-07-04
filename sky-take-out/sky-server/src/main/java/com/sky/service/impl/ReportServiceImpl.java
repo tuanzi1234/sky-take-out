@@ -7,10 +7,7 @@ import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.result.Result;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.vo.*;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -204,6 +201,38 @@ public class ReportServiceImpl implements ReportService {
         return SalesTop10ReportVO.builder()
                 .nameList(nameList)
                 .numberList(numberList)
+                .build();
+    }
+
+    /**
+     * 营业额统计
+     *
+     * @param businessDataVO
+     * @return
+     */
+    @Override
+    public BusinessDataVO getBusinessData(BusinessDataVO businessDataVO) {
+        //统计今日营业额
+        LocalDate now = LocalDate.now();
+        //统计今日营业额
+        Double turnover =  orderMapper.getOrderAmountStatistics(now, Orders.COMPLETED);
+        //统计今日有效订单数
+        Integer validOrderCount = orderMapper.getOrderCountStatistics(now, Orders.COMPLETED);
+        //统计总订单数
+        Integer totalOrderCount = orderMapper.getOrderCountStatistics(now, null);
+        //统计订单完成率
+        Double orderCompletionRate = validOrderCount.doubleValue() / totalOrderCount;
+        //计算平均客单价 = 营业额 / 有效订单数
+        Double unitPrice = turnover / validOrderCount;
+        //统计新增用户数
+        Integer newUsers = userMapper.getNewUsers(now);
+        //封装VO对象并返回
+        return BusinessDataVO.builder()
+                .turnover(turnover)
+                .validOrderCount(validOrderCount)
+                .orderCompletionRate(orderCompletionRate)
+                .unitPrice(unitPrice)
+                .newUsers(newUsers)
                 .build();
     }
 }

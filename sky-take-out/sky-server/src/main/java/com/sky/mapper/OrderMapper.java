@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Select;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -97,4 +98,22 @@ public interface OrderMapper {
      * @return
      */
     List<GoodsSalesDTO> getSalesTop10(LocalDateTime begin, LocalDateTime end);
+
+    /**
+     * 统计指定时间的订单数量
+     *
+     * @param now
+     * @param status
+     * @return
+     */
+    Integer getOrderCountStatistics(LocalDate now, Integer status);
+
+    /**
+     * 统计指定时间段的营业额
+     *
+     * @param now
+     * @param status
+     * @return
+     */
+    Double getOrderAmountStatistics(LocalDate now, Integer status);
 }

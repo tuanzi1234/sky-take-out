@@ -101,7 +101,7 @@
     <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
         select od.name, sum(od.number) as number
         from order_detail as od
-                 left join orders as o on od.order_id = o.id
+        left join orders as o on od.order_id = o.id
         where o.status = 5
         <if test="begin != null">
             and order_time &gt;= #{begin}
@@ -112,6 +112,30 @@
         group by od.name
         order by number desc
         limit 0,10
+    </select>
+    <!--    查询今日订单数量-->
+    <select id="getOrderCountStatistics" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="now != null">
+                and order_time like concat('%',#{now},'%')
+            </if>
+        </where>
+    </select>
+    <!--    查询今日营业额-->
+    <select id="getOrderAmountStatistics" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="now != null">
+                and order_time like concat('%',#{now},'%')
+            </if>
+        </where>
     </select>
 
 </mapper>

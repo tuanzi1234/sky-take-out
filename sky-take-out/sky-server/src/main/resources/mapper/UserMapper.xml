@@ -7,6 +7,7 @@
         insert into user (openid, name, phone, sex, id_number, avatar, create_time)
         values (#{openid}, #{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{createTime})
     </insert>
+
     <!--    根据动态日期数据查询用户数量-->
     <select id="countByMap" resultType="java.lang.Integer">
         select count(id) from user
@@ -16,6 +17,15 @@
             </if>
             <if test="end != null">
                 and create_time &lt;= #{end}
+            </if>
+        </where>
+    </select>
+<!--    根据动态日期数据查询用户数量-->
+    <select id="getNewUsers" resultType="java.lang.Integer">
+        select count(id) from user
+        <where>
+            <if test="now != null">
+                and create_time like concat('%',#{now},'%')
             </if>
         </where>
     </select>

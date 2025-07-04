@@ -4,6 +4,7 @@ import com.sky.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @Mapper
@@ -36,4 +37,11 @@ public interface UserMapper {
      * @param map
      */
     Integer countByMap(Map map);
+
+    /**
+     * 查询今日用户数量
+     * @param now
+     * @return
+     */
+    Integer getNewUsers(LocalDate now);
 }
