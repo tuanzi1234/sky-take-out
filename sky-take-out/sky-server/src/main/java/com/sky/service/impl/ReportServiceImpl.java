@@ -1,7 +1,9 @@
 package com.sky.service.impl;
 
+import com.sky.constant.StatusConstant;
 import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
+import com.sky.mapper.DishMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.UserMapper;
@@ -33,6 +35,10 @@ public class ReportServiceImpl implements ReportService {
     private OrderMapper orderMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+    @Autowired
+    private DishMapper dishMapper;
 
     /**
      * 营业额统计
@@ -235,4 +241,23 @@ public class ReportServiceImpl implements ReportService {
                 .newUsers(newUsers)
                 .build();
     }
+
+    /**
+     * 套餐总览
+     * @return
+     */
+    @Override
+    public SetmealOverViewVO getSetmealOverView(SetmealOverViewVO setmealOverViewVO) {
+        // 查询起售的套餐数量
+        Integer sold = setmealMapper.countByStatus(StatusConstant.ENABLE);
+        // 查询停售的套餐数量
+        Integer discontinued = setmealMapper.countByStatus(StatusConstant.DISABLE);
+        // 封装数据并返回
+        return SetmealOverViewVO.builder()
+                .sold(sold)
+                .discontinued(discontinued)
+                .build();
+    }
+
+
 }

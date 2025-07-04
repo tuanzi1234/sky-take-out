@@ -46,4 +46,10 @@ public interface ReportService {
      * @return
      */
     BusinessDataVO getBusinessData(BusinessDataVO businessDataVO);
+
+    /**
+     * 套餐总览
+     * @return
+     */
+    SetmealOverViewVO getSetmealOverView(SetmealOverViewVO setmealOverViewVO);
 }
