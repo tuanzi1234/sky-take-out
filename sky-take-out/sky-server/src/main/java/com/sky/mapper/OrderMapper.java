@@ -72,4 +72,10 @@ public interface OrderMapper {
      * @param map
      */
     Double getOrdersByTimeAndStatus( Map<String, Object> map);
+
+    /**
+     * 通过状态、开始时间和结束时间搜索对应订单的订单数量
+     * @param map
+     */
+    Integer getOrdersCountByTimeAndStatus( Map<String, Object> map);
 }
