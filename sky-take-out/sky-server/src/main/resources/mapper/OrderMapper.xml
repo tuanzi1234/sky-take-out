@@ -67,5 +67,20 @@
         </where>
         order by order_time desc
     </select>
+    <!--    统计对应日期的订单金额-->
+    <select id="getOrdersByTimeAndStatus" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="begin != null">
+                and order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+        </where>
+    </select>
 
 </mapper>
