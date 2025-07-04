@@ -485,4 +485,24 @@ public class OrderServiceImpl implements OrderService {
         updateOrder.setDeliveryTime(LocalDateTime.now());
         orderMapper.update(updateOrder);
     }
+
+    /**
+     * 催单
+     *
+     * @param id
+     */
+    @Override
+    public void reminder(Long id) {
+        Orders order = orderMapper.getById(id);
+        // 判断订单是否存在
+        if (order == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 2);
+        map.put("orderId", order.getId());
+        map.put("content", "订单号：" + order.getNumber() + "，请尽快处理");
+        // 通过WebSocket发送消息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
+    }
 }
