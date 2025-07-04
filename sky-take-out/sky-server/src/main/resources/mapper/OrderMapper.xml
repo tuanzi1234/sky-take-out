@@ -137,5 +137,14 @@
             </if>
         </where>
     </select>
+    <!--    根据状态查询订单数量-->
+    <select id="countByStatus" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
 
 </mapper>

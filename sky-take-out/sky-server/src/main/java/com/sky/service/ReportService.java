@@ -3,6 +3,7 @@ package com.sky.service;
 import com.sky.dto.GoodsSalesDTO;
 import com.sky.vo.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -52,4 +53,22 @@ public interface ReportService {
      * @return
      */
     SetmealOverViewVO getSetmealOverView(SetmealOverViewVO setmealOverViewVO);
+
+    /**
+     * 菜品总览
+     * @return
+     */
+    DishOverViewVO getDishOverView(DishOverViewVO dishOverViewVO);
+
+    /**
+     * 订单总览
+     * @return
+     */
+    OrderOverViewVO getOrderOverView(OrderOverViewVO orderOverViewVO);
+
+    /**
+     * 导出数据
+     * @param response
+     */
+    void expertData(HttpServletResponse response);
 }

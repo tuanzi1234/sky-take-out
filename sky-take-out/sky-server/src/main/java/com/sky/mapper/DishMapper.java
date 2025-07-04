@@ -70,4 +70,13 @@ public interface DishMapper {
      * @return
      */
     List<Dish> list(Long categoryId);
+
+
+    /**
+     * 查询指定状态的菜品数量
+     * @param status
+     * @return
+     */
+    @Select("select count(id) from dish where status = #{status}")
+    Integer countByStatus(Integer status);
 }

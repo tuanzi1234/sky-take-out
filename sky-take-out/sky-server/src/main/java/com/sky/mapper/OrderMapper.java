@@ -63,7 +63,6 @@ public interface OrderMapper {
      * @param status
      * @return
      */
-    @Select("select count(id) from orders where status = #{status}")
     Integer countByStatus(Integer status);
 
     /**
