@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -29,6 +31,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private SetmealMapper setmealMapper;
 
+    /**
+     * 分类分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
     @Override
     public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) {
         PageHelper.startPage(categoryPageQueryDTO.getPage(), categoryPageQueryDTO.getPageSize());
@@ -36,6 +43,10 @@ public class CategoryServiceImpl implements CategoryService {
         return new PageResult(page.getTotal(), page.getResult());
     }
 
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
     @Override
     public void save(CategoryDTO categoryDTO) {
         Category category = new Category();
@@ -112,6 +123,11 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public List<Category> getCategoryByType(Integer type) {
-        return categoryMapper.getCategoryByType(type);
+        //判断分类状态，若分类被禁用，则不返回该分类
+        List<Category> list =categoryMapper.getCategoryByType(type);
+        // 过滤掉被禁用的分类（只保留状态为启用的分类）
+        return list.stream()
+                .filter(category -> StatusConstant.ENABLE.equals(category.getStatus()))
+                .collect(Collectors.toList());
     }
 }
